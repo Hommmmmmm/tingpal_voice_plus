@@ -1,6 +1,6 @@
 /*
 @file
-@brief ·â×°windowsÂ¼Òô
+@brief ï¿½ï¿½×°windowsÂ¼ï¿½ï¿½
 
 @author		taozhang9
 @date		2016/05/27
@@ -62,8 +62,6 @@ static void dbg_wave_header(WAVEHDR * buf)
 
 static int create_callback_thread(void *thread_proc_para, HANDLE *thread_hdl_out)
 {
-	int ret = 0;
-
 	HANDLE rec_thread_hdl = 0;
 	unsigned int rec_thread_id;	
 
