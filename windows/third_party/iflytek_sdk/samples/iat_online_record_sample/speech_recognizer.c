@@ -110,7 +110,7 @@ static void end_sr_on_error(struct speech_rec *sr, int errcode)
 {
 	if(sr->aud_src == SR_MIC)
 		stop_record(sr->recorder);
-	
+
 	if (sr->session_id) {
 		if (sr->notif.on_speech_end)
 			sr->notif.on_speech_end(errcode);
@@ -130,7 +130,7 @@ static void end_sr_on_vad(struct speech_rec *sr)
 	const char *rslt;
 
 	if (sr->aud_src == SR_MIC)
-		stop_record(sr->recorder);	
+		stop_record(sr->recorder);
 
 	while(sr->rec_stat != MSP_REC_STATUS_COMPLETE ){
 		rslt = QISRGetResult(sr->session_id, &sr->rec_stat, 0, &errcode);
@@ -165,7 +165,7 @@ static void iat_cb(char *data, unsigned long len, void *user_para)
 
 	if(sr == NULL || sr->ep_stat >= MSP_EP_AFTER_SPEECH)
 		return;
-	
+
 #ifdef __FILE_SAVE_VERIFY__
 	loopwrite_to_file(data, len);
 #endif
@@ -205,7 +205,7 @@ static int update_format_from_sessionparam(const char * session_para, WAVEFORMAT
 }
 
 /* devid will be ignored if aud_src is not SR_MIC ; if devid == -1, then
- * the default input device will be used.  
+ * the default input device will be used.
  */
 
 int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_audsrc aud_src, int devid, struct speech_rec_notifier * notify)
@@ -241,7 +241,7 @@ int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_a
 	memcpy(sr->session_begin_params, session_begin_params, param_size);
 
 	sr->notif = *notify;
-	
+
 	if (aud_src == SR_MIC) {
 		errcode = create_recorder(&sr->recorder, iat_cb, (void*)sr);
 		if (sr->recorder == NULL || errcode != 0) {
@@ -250,7 +250,7 @@ int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_a
 			goto fail;
 		}
 		update_format_from_sessionparam(session_begin_params, &wavfmt);
-	
+
 		errcode = open_recorder(sr->recorder, devid, &wavfmt);
 		if (errcode != 0) {
 			sr_dbg("recorder open failed: %d\n", errcode);

@@ -1,6 +1,7 @@
 #ifndef FLUTTER_PLUGIN_TINGPAL_VOICE_PLUS_PLUGIN_H_
 #define FLUTTER_PLUGIN_TINGPAL_VOICE_PLUS_PLUGIN_H_
 
+#include <flutter/encodable_value.h>
 #include <flutter/event_channel.h>
 #include <flutter/event_sink.h>
 #include <flutter/method_channel.h>

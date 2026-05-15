@@ -9,12 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
-#include <mmsystem.h>   
+#include <mmsystem.h>
 #include <process.h>
 #include <errno.h>
 #include "./include/winrec.h"
 
-#pragma comment(lib, "winmm.lib") 
+#pragma comment(lib, "winmm.lib")
 
 #define DBG_ON 0
 
@@ -50,7 +50,7 @@ static void dbg_wave_header(WAVEHDR * buf)
 {
 	dbg("-----\n");
 	dbg("Buf %x: User= %d, Len=%d, Rec = %d, Flag = %x\n", buf,
-		buf->dwUser, buf->dwBufferLength, buf->dwBytesRecorded, 
+		buf->dwUser, buf->dwBufferLength, buf->dwBytesRecorded,
 		buf->dwFlags);
 	dbg("-----\n");
 }
@@ -63,10 +63,10 @@ static void dbg_wave_header(WAVEHDR * buf)
 static int create_callback_thread(void *thread_proc_para, HANDLE *thread_hdl_out)
 {
 	HANDLE rec_thread_hdl = 0;
-	unsigned int rec_thread_id;	
+	unsigned int rec_thread_id;
 
-	/* For indicating the thread's life stage. 
-	   . signaled after the call back thread started and create its message 
+	/* For indicating the thread's life stage.
+	   . signaled after the call back thread started and create its message
 	     queue.
 	   . will be close after callback thread exit.
 	   . must be manual reset. once signaled, keep in signaled state */
@@ -74,8 +74,8 @@ static int create_callback_thread(void *thread_proc_para, HANDLE *thread_hdl_out
 	if(msgqueue_ready_evt == NULL)
 		return -1;
 
-	rec_thread_hdl = (HANDLE) _beginthreadex(NULL, 0, record_thread_proc, thread_proc_para, 0, &rec_thread_id); 
-	if(rec_thread_hdl == 0) {		
+	rec_thread_hdl = (HANDLE) _beginthreadex(NULL, 0, record_thread_proc, thread_proc_para, 0, &rec_thread_id);
+	if(rec_thread_hdl == 0) {
 		/* close the event handle */
 		CloseHandle(msgqueue_ready_evt);
 		msgqueue_ready_evt = NULL;
@@ -83,7 +83,7 @@ static int create_callback_thread(void *thread_proc_para, HANDLE *thread_hdl_out
 		return -1;
 	}
 
-		
+
 	*thread_hdl_out = rec_thread_hdl;
 
 	/* wait the message queue of the new thread has been created */
@@ -116,11 +116,11 @@ static int open_rec_device(int dev, WAVEFORMATEX *format, HANDLE thread, HWAVEIN
 	HWAVEIN wi = NULL;
 	WAVEFORMATEX fmt;
 	WAVEFORMATEX *final_fmt;
-	
+
 	if(thread == NULL)
 		return -RECORD_ERR_INVAL;
-	
-	if(format == NULL) {		
+
+	if(format == NULL) {
 		fmt.wFormatTag = WAVE_FORMAT_PCM;
 		fmt.nChannels = 1;
 		fmt.nSamplesPerSec = SAMPLE_RATE;
@@ -144,15 +144,15 @@ static int open_rec_device(int dev, WAVEFORMATEX *format, HANDLE thread, HWAVEIN
 static int prepare_rec_buffer(HWAVEIN wi, WAVEHDR ** bufheader_out, unsigned int headercount, unsigned int bufsize)
 {
 	int ret = 0;
-	unsigned int i = 0;	
+	unsigned int i = 0;
 	char clearout = 0;
 	WAVEHDR *header;
 	MMRESULT res;
-	
+
 	/* at least doubel buffering */
 	if(headercount < 2 || bufheader_out == NULL)
 		return -RECORD_ERR_INVAL;
-	
+
 	header = (WAVEHDR *)malloc(sizeof(WAVEHDR) * headercount);
 	if(!header)
 		return - RECORD_ERR_MEMFAIL;
@@ -164,7 +164,7 @@ static int prepare_rec_buffer(HWAVEIN wi, WAVEHDR ** bufheader_out, unsigned int
 			clearout = 1;
 			goto exit;
 		}
-		(header+i)->dwBufferLength = bufsize;			
+		(header+i)->dwBufferLength = bufsize;
 		(header+i)->dwFlags  = 0;
 		(header+i)->dwUser = i+1; /* my usage: if 0, indicate it's not used */
 
@@ -179,7 +179,7 @@ static int prepare_rec_buffer(HWAVEIN wi, WAVEHDR ** bufheader_out, unsigned int
 
 exit:
 	if(clearout) {
-		free_rec_buffer(wi, header, headercount);	
+		free_rec_buffer(wi, header, headercount);
 	}
 	return ret;
 }
@@ -214,7 +214,7 @@ static int start_record_internal(HWAVEIN wi, WAVEHDR *header, unsigned int bufco
 {
 	MMRESULT res;
 	unsigned int i;
-	
+
 	if(bufcount < 2)
 		return -1;
 
@@ -222,7 +222,7 @@ static int start_record_internal(HWAVEIN wi, WAVEHDR *header, unsigned int bufco
 	and this buffer must has been allocated and prepared. */
 	for(i = 0; i < bufcount; ++i) {
 		if( (header->dwFlags & WHDR_INQUEUE) == 0) {
-			header->dwUser = i + 1; 
+			header->dwUser = i + 1;
 			res = waveInAddBuffer(wi, header, sizeof(WAVEHDR));
 			if(res != MMSYSERR_NOERROR) {
 				waveInReset(wi);
@@ -242,7 +242,7 @@ static int start_record_internal(HWAVEIN wi, WAVEHDR *header, unsigned int bufco
 
 static int stop_record_internal(HWAVEIN wi)
 {
-	MMRESULT res; 
+	MMRESULT res;
 	//res = waveInStop(wi); /* some buffer may be still in the driver's queue */
 	res = waveInReset(wi);
 
@@ -273,7 +273,7 @@ static unsigned int  __stdcall record_thread_proc ( void * para)
 		case MM_WIM_OPEN:
 			dbg("opened....\n");
 			break;
-		case MM_WIM_CLOSE:			
+		case MM_WIM_CLOSE:
 			dbg("closed....\n");
 			PostQuitMessage(0);
 			break;
@@ -296,9 +296,9 @@ static void data_proc(struct recorder *rec, MSG *msg)
 	whdl = (HWAVEIN)msg->wParam;
 	buf = (WAVEHDR *)msg->lParam;
 
-	dbg("data....\n");	
+	dbg("data....\n");
 	dbg_wave_header(buf);
-	
+
 	/* dwUser should be index + 1 */
 	if(buf->dwUser > rec->bufcount) {
 		dbg("data_proc: something wrong. maybe buffer is reset.\n");
@@ -316,7 +316,7 @@ static void data_proc(struct recorder *rec, MSG *msg)
 	default:
 		/* from this flag, can check if the whole data is processed after stopping */
 		buf->dwUser = 0;
-		break;		
+		break;
 	}
 }
 
@@ -365,24 +365,24 @@ static int open_recorder_internal(struct recorder * rec, unsigned int dev, WAVEF
 		buf_size =  fmt->nBlockAlign *(fmt->nSamplesPerSec/50) * FRAME_CNT; // 200ms
 	else
 		buf_size = FRAME_CNT * 20 * 16 * 2;  // 16khz, 16bit, 200ms;
-	
+
 	ret = prepare_rec_buffer((HWAVEIN)rec->wavein_hdl,  (WAVEHDR **)&rec->bufheader, rec->bufcount , buf_size);
 	if(ret != 0 ) {
 		goto fail;
 	}
 
 	return 0;
-	
+
 fail:
 
 	if(rec->bufheader) {
-		free_rec_buffer((HWAVEIN)rec->wavein_hdl,(WAVEHDR *)rec->bufheader, rec->bufcount );		
+		free_rec_buffer((HWAVEIN)rec->wavein_hdl,(WAVEHDR *)rec->bufheader, rec->bufcount );
 		rec->bufheader = NULL;
 		rec->bufcount = 0;
-	}	
-	if(rec->wavein_hdl) {		
+	}
+	if(rec->wavein_hdl) {
 		close_rec_device((HWAVEIN)rec->wavein_hdl);
-		rec->wavein_hdl = NULL;		
+		rec->wavein_hdl = NULL;
 	}
 	if(rec->rec_thread_hdl) {
 		close_callback_thread(rec->rec_thread_hdl);
@@ -411,8 +411,8 @@ static void close_recorder_internal(struct recorder *rec)
 }
 
 /* -------------------------------------
- * Interfaces 
- --------------------------------------*/ 
+ * Interfaces
+ --------------------------------------*/
 int get_default_input_dev()
 {
 	return WAVE_MAPPER;
@@ -424,8 +424,8 @@ unsigned int get_input_dev_num()
 }
 
 /* callback will be run on a new thread */
-int create_recorder(struct recorder ** out_rec, 
-				void (*on_data_ind)(char *data, unsigned long len, void *user_cb_para), 
+int create_recorder(struct recorder ** out_rec,
+				void (*on_data_ind)(char *data, unsigned long len, void *user_cb_para),
 				void* user_cb_para)
 {
 	struct recorder * myrec;
@@ -474,7 +474,7 @@ void close_recorder(struct recorder *rec)
 
 	close_recorder_internal(rec);
 
-	rec->state = RECORD_STATE_CREATED;	
+	rec->state = RECORD_STATE_CREATED;
 }
 
 int start_record(struct recorder * rec)
@@ -503,7 +503,7 @@ int stop_record(struct recorder * rec)
 
 	rec->state = RECORD_STATE_STOPPING;
 	ret = stop_record_internal((HWAVEIN)rec->wavein_hdl);
-	if(ret == 0) {		
+	if(ret == 0) {
 		rec->state = RECORD_STATE_READY;
 	}
 	return ret;
