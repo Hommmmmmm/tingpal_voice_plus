@@ -136,86 +136,24 @@ class TingpalVoiceOptions {
 }
 
 class TingpalAsrJsonResult {
-  TingpalAsrJsonResult({
-    this.sn,
-    this.ls,
-    this.bg,
-    this.ed,
-    this.pgs,
-    this.rg,
-    this.ws,
-  });
+  TingpalAsrJsonResult._();
 
-  factory TingpalAsrJsonResult.fromJsonString(String rawJson) {
+  /// iOS ISRDataHelper.stringFromJson 的 Dart 等价实现：
+  /// 遍历 ws 中每个词的所有 cw 候选，拼接 w 字段。
+  static String stringFromJson(String rawJson) {
     final json = jsonDecode(rawJson) as Map<String, dynamic>;
-    return TingpalAsrJsonResult(
-      sn: (json['sn'] as num?)?.toInt(),
-      ls: json['ls'] as bool?,
-      bg: (json['bg'] as num?)?.toInt(),
-      ed: (json['ed'] as num?)?.toInt(),
-      pgs: json['pgs'] as String?,
-      rg: (json['rg'] as List?)?.toList(),
-      ws: (json['ws'] as List?)
-          ?.map((e) => Map<String, dynamic>.from(e as Map))
-          .toList(),
-    );
-  }
-
-  int? sn;
-  bool? ls;
-  int? bg;
-  int? ed;
-  String? pgs;
-  List<dynamic>? rg;
-  List<Map<String, dynamic>>? ws;
-
-  void merge(TingpalAsrJsonResult incoming) {
-    sn = incoming.sn;
-    ls = incoming.ls;
-    bg = incoming.bg;
-    ed = incoming.ed;
-    rg = incoming.rg;
-
-    if (incoming.pgs == 'apd') {
-      ws ??= <Map<String, dynamic>>[];
-      ws!.addAll(incoming.ws ?? const <Map<String, dynamic>>[]);
-    } else {
-      ws = incoming.ws;
-    }
-    pgs = incoming.pgs;
-  }
-
-  String resultText() {
-    final segments = ws ?? const <Map<String, dynamic>>[];
-    return segments.map((segment) {
-      final candidates = (segment['cw'] as List?) ?? const [];
-      if (candidates.isEmpty) {
-        return '';
+    final wordArray = json['ws'] as List?;
+    if (wordArray == null || wordArray.isEmpty) return '';
+    final buffer = StringBuffer();
+    for (final wsItem in wordArray) {
+      final wsDic = wsItem as Map<String, dynamic>;
+      final cwArray = wsDic['cw'] as List?;
+      if (cwArray == null) continue;
+      for (final cwItem in cwArray) {
+        final wDic = cwItem as Map<String, dynamic>;
+        buffer.write(wDic['w'] as String? ?? '');
       }
-      final first = Map<String, dynamic>.from(candidates.first as Map);
-      return first['w'] as String? ?? '';
-    }).join();
-  }
-}
-
-class TingpalAsrResultAssembler {
-  TingpalAsrJsonResult? _merged;
-
-  void reset() {
-    _merged = null;
-  }
-
-  String addJsonChunk(String rawJson) {
-    final incoming = TingpalAsrJsonResult.fromJsonString(rawJson);
-    if (_merged == null) {
-      _merged = incoming;
-    } else {
-      _merged!.merge(incoming);
     }
-    return _merged!.resultText();
-  }
-
-  String currentText() {
-    return _merged?.resultText() ?? '';
+    return buffer.toString();
   }
 }
