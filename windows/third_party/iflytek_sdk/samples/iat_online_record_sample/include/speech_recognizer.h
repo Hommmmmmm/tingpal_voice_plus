@@ -58,6 +58,10 @@ int sr_write_audio_data(struct speech_rec *sr, char *data, unsigned int len);
 /* must call uninit after you don't use it */
 void sr_uninit(struct speech_rec * sr);
 
+/* set the absolute path where the recording is saved (plugin calls
+ * this before sr_start_listening) */
+void sr_set_verify_file_path(const char *path);
+
 #ifdef __cplusplus
 } /* extern "C" */	
 #endif /* C++ */

@@ -311,11 +311,24 @@ void TingpalVoicePlusPlugin::HandleMethodCall(
     }
 
     auto audio_it = voice_options_.find("asr_audio_path");
+    audio_file_path_.clear();
+    std::string temp_path;
     if (audio_it != voice_options_.end() &&
         std::holds_alternative<std::string>(audio_it->second)) {
-      audio_file_path_ = std::get<std::string>(audio_it->second);
-    } else {
-      audio_file_path_.clear();
+      // Save the recording into the system temp directory: the process CWD
+      // may be read-only when the app is installed (Program Files / Store).
+      char temp_dir[MAX_PATH] = {};
+      const DWORD dir_len = GetTempPathA(MAX_PATH, temp_dir);
+      if (dir_len > 0 && dir_len < static_cast<DWORD>(MAX_PATH)) {
+        temp_path =
+            std::string(temp_dir) + std::get<std::string>(audio_it->second);
+      }
+    }
+    if (!temp_path.empty()) {
+      // Also pass the absolute path to the C layer and store it for
+      // onCompleted, so the recording lands exactly where Dart will read it.
+      audio_file_path_ = temp_path;
+      sr_set_verify_file_path(temp_path.c_str());
     }
 
     if (recognizer_ready_) {

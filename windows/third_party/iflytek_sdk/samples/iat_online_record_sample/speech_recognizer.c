@@ -19,9 +19,11 @@
 // Linking is handled by CMakeLists.txt via target_link_libraries.
 
 #define SR_DBGON 0
+/* save the recording into file 'xf_iat_audio.pcm' (same name returned to
+ * Dart via asr_audio_path), used for "play my recording" playback */
+#define __FILE_SAVE_VERIFY__
 #if SR_DBGON == 1
 #	define sr_dbg printf
-//#	define __FILE_SAVE_VERIFY__  /* save the recording data into file 'rec.pcm' too */
 #else
 #	define sr_dbg
 #endif
@@ -48,11 +50,26 @@ enum {
 
 /* for debug. saving the recording to a file */
 #ifdef __FILE_SAVE_VERIFY__
-#define VERIFY_FILE_NAME	"rec.pcm"
+#define VERIFY_FILE_NAME	"xf_iat_audio.pcm"
 static int open_stored_file(const char * name);
 static int loopwrite_to_file(char *data, size_t length);
 static void safe_close_file();
 #endif
+
+/* absolute path where the recording is saved; the plugin sets it
+ * before sr_start_listening (defaults to VERIFY_FILE_NAME,
+ * relative to the process CWD) */
+static char g_verify_file_path[MAX_PATH] = VERIFY_FILE_NAME;
+
+void sr_set_verify_file_path(const char *path)
+{
+	size_t len = strlen(path);
+	if (len >= (size_t)MAX_PATH) {
+		len = MAX_PATH - 1;
+	}
+	memcpy(g_verify_file_path, path, len);
+	g_verify_file_path[len] = '\0';
+}
 
 #define SR_MALLOC malloc
 #define SR_MFREE  free
@@ -64,8 +81,7 @@ static FILE *fdwav = NULL;
 
 static int open_stored_file(const char * name)
 {
-	fdwav = fopen(name, "wb+");
-	if(fdwav == NULL) {
+	if (fopen_s(&fdwav, name, "wb+") != 0 || fdwav == NULL) {
 		printf("error open file failed\n");
 		return -1;
 	}
@@ -303,7 +319,7 @@ int sr_start_listening(struct speech_rec *sr)
 			return -E_SR_RECORDFAIL;
 		}
 #ifdef __FILE_SAVE_VERIFY__
-		open_stored_file(VERIFY_FILE_NAME);
+		open_stored_file(g_verify_file_path);
 #endif
 	}
 
