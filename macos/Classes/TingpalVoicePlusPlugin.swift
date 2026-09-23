@@ -281,12 +281,6 @@ public class TingpalVoicePlusPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
 
   private func startAudioRecording() {
     let inputNode = audioEngine.inputNode
-    let inputFormat = inputNode.outputFormat(forBus: 0)
-
-    guard inputFormat.sampleRate > 0 else {
-      handleComplete(code: 10004, desc: "音频输入设备未就绪 (sampleRate == 0)")
-      return
-    }
 
     guard let targetFormat = AVAudioFormat(
       commonFormat: .pcmFormatInt16,
@@ -299,15 +293,16 @@ public class TingpalVoicePlusPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     }
 
     self.targetAudioFormat = targetFormat
-    self.audioConverter = AVAudioConverter(from: inputFormat, to: targetFormat)
+    self.audioConverter = nil
 
     inputNode.removeTap(onBus: 0)
-    inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
+    inputNode.installTap(onBus: 0, bufferSize: 1024, format: nil) { [weak self] buffer, _ in
       self?.audioQueue.async {
         self?.processAudioTap(buffer: buffer)
       }
     }
 
+    audioEngine.prepare()
     do {
       try audioEngine.start()
     } catch {
@@ -323,7 +318,14 @@ public class TingpalVoicePlusPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
   }
 
   private func processAudioTap(buffer: AVAudioPCMBuffer) {
-    guard isListening, let converter = self.audioConverter, let targetFormat = self.targetAudioFormat else { return }
+    guard isListening, let targetFormat = self.targetAudioFormat else { return }
+    guard buffer.format.sampleRate > 0 else { return }
+
+    if self.audioConverter == nil || self.audioConverter?.inputFormat != buffer.format {
+      self.audioConverter = AVAudioConverter(from: buffer.format, to: targetFormat)
+    }
+
+    guard let converter = self.audioConverter else { return }
 
     let ratio = 16000.0 / buffer.format.sampleRate
     let outputFrameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 128
