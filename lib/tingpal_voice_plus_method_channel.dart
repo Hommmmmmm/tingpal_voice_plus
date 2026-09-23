@@ -45,12 +45,16 @@ class TingpalVoiceMethodChannelPlatform extends TingpalVoicePlatform {
     String? appIdAndroid,
     String? appIdWeb,
     String? appIdWindows,
+    String? apiKeyWeb,
+    String? apiSecretWeb,
   }) async {
     await methodChannel.invokeMethod<void>('init', <String, dynamic>{
       'appIdIos': appIdIos,
       'appIdAndroid': appIdAndroid,
       'appIdWeb': appIdWeb,
       'appIdWindows': appIdWindows,
+      'apiKeyWeb': apiKeyWeb,
+      'apiSecretWeb': apiSecretWeb,
     });
   }
 

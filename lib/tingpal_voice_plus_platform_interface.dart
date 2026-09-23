@@ -45,6 +45,8 @@ abstract class TingpalVoicePlatform extends PlatformInterface {
     String? appIdAndroid,
     String? appIdWeb,
     String? appIdWindows,
+    String? apiKeyWeb,
+    String? apiSecretWeb,
   }) {
     throw UnimplementedError('init() has not been implemented.');
   }

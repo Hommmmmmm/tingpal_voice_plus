@@ -18,12 +18,16 @@ class TingpalVoiceClient {
     String? appIdAndroid,
     String? appIdWeb,
     String? appIdWindows,
+    String? apiKeyWeb,
+    String? apiSecretWeb,
   }) {
     return TingpalVoicePlatform.instance.init(
       appIdIos: appIdIos,
       appIdAndroid: appIdAndroid,
       appIdWeb: appIdWeb,
       appIdWindows: appIdWindows,
+      apiKeyWeb: apiKeyWeb,
+      apiSecretWeb: apiSecretWeb,
     );
   }
 

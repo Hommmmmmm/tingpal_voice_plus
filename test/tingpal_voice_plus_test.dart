@@ -16,6 +16,8 @@ class MockTingpalVoicePlatform
     String? appIdAndroid,
     String? appIdWeb,
     String? appIdWindows,
+    String? apiKeyWeb,
+    String? apiSecretWeb,
   }) async {}
 
   @override

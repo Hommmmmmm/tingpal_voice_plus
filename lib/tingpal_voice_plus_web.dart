@@ -23,6 +23,8 @@ class TingpalVoicePlusWeb extends TingpalVoicePlatform {
     String? appIdAndroid,
     String? appIdWeb,
     String? appIdWindows,
+    String? apiKeyWeb,
+    String? apiSecretWeb,
   }) async {
     _appIdWeb = appIdWeb;
   }

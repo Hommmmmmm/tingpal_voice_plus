@@ -43,6 +43,8 @@ flutter:
         pluginClass: TingpalVoicePlusPlugin
       ios:
         pluginClass: TingpalVoicePlusPlugin
+      macos:
+        pluginClass: TingpalVoicePlusPlugin
       windows:
         pluginClass: TingpalVoicePlusPluginCApi
       web:
